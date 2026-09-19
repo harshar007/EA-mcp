@@ -61,7 +61,30 @@ P:/rag pipline EA/
 
 ---
 
-## 🚀 Quickstart Guide
+## 🐳 Docker Deployment
+
+### 1. Build and Start All Services
+```bash
+docker compose up -d
+```
+This boots up:
+- **MCP Setup & Admin Portal**: `http://localhost:8501`
+- **Jupyter Notebook**: `http://localhost:8888` (Token: `electronics_rag_secret`)
+- **MCP Server**: Stdio / JSON-RPC container ready for AI agent connections
+
+### 2. Ingest Documents via Docker
+```bash
+docker compose run --rm ingest
+```
+
+### 3. Stop All Containers
+```bash
+docker compose down
+```
+
+---
+
+## 🚀 Local Quickstart Guide
 
 ### 1. Install Dependencies
 ```bash

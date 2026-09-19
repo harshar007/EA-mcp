@@ -1,0 +1,94 @@
+services:
+  # -------------------------------------------------------------
+  # 1. MCP Setup & Connection Portal (Admin UI - No Chatbot)
+  # -------------------------------------------------------------
+  mcp-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: electronics_rag_mcp_ui
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - VECTOR_DB_PATH=/app/data/vector_store
+      - VECTOR_COLLECTION_NAME=electronics_knowledge
+      - EMBEDDING_PROVIDER=sentence-transformers
+      - EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    restart: unless-stopped
+    command: ["streamlit", "run", "src/presentation/ui/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+
+  # -------------------------------------------------------------
+  # 2. Electronics Model Context Protocol (MCP) Server
+  # -------------------------------------------------------------
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: electronics_rag_mcp_server
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - VECTOR_DB_PATH=/app/data/vector_store
+      - MCP_TRANSPORT=stdio
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    command: ["python", "src/presentation/mcp_server.py"]
+
+  # -------------------------------------------------------------
+  # 3. Interactive Jupyter Notebook Environment
+  # -------------------------------------------------------------
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: electronics_rag_jupyter
+    ports:
+      - "8888:8888"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - JUPYTER_TOKEN=electronics_rag_secret
+    volumes:
+      - ./data:/app/data
+      - ./notebooks:/app/notebooks
+      - ./src:/app/src
+    restart: unless-stopped
+    command: [
+      "jupyter", "notebook",
+      "--ip=0.0.0.0",
+      "--port=8888",
+      "--no-browser",
+      "--allow-root",
+      "--NotebookApp.token=electronics_rag_secret",
+      "--NotebookApp.password="
+    ]
+
+  # -------------------------------------------------------------
+  # 4. Ingestion Job (One-shot profile: `docker compose run ingest`)
+  # -------------------------------------------------------------
+  ingest:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: electronics_rag_ingest
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - VECTOR_DB_PATH=/app/data/vector_store
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    profiles:
+      - tools
+    command: ["python", "src/presentation/cli.py", "ingest"]

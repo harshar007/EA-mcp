@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "electronics-rag": {
+      "command": "python",
+      "args": [
+        "P:/rag pipline EA/src/presentation/mcp_server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "P:/rag pipline EA",
+        "VECTOR_DB_PATH": "P:/rag pipline EA/data/vector_store"
+      }
+    },
+    "electronics-rag-docker": {
+      "command": "/usr/local/bin/python3.11",
+      "args": [
+        "/app/src/presentation/mcp_server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/app",
+        "VECTOR_DB_PATH": "/app/data/vector_store"
+      }
+    }
+  }
+}

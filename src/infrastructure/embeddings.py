@@ -1,7 +1,4 @@
-"""
-Embedding Adapters for Electronics RAG System.
-Provides dense vector representations with sentence-transformers and lightweight deterministic fallback.
-"""
+import sys
 import math
 import hashlib
 from typing import List
@@ -23,7 +20,8 @@ class SentenceTransformerEmbeddingAdapter(EmbeddingModelInterface):
                 self._model = SentenceTransformer(self.model_name)
                 self._dimension = self._model.get_sentence_embedding_dimension()
             except Exception as e:
-                print(f"Warning: Could not load sentence-transformers ({e}). Falling back to deterministic hashing embedding.")
+                sys.stderr.write(f"Notice: Could not load sentence-transformers ({e}). Falling back to deterministic hashing embedding.\n")
+                sys.stderr.flush()
                 self._model = "fallback"
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:

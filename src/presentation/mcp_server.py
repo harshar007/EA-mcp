@@ -1,12 +1,23 @@
-"""
-Electronics RAG Model Context Protocol (MCP) Server.
-Clean Architecture - Presentation Layer.
-Exposes electronics domain knowledge tools over standard stdio / JSON-RPC / SSE for AI Agents.
-"""
 import sys
+import os
 import json
 import asyncio
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# Automatically ensure project root is in sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+# Ensure UTF-8 on Windows
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 from src.application.mcp_service import MCPService
 from src.infrastructure.config import settings
 

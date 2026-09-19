@@ -1,7 +1,4 @@
-"""
-Vector Database Store Implementation.
-Provides persistent vector storage with ChromaDB, with cosine similarity search and metadata filtering.
-"""
+import sys
 import math
 import json
 from pathlib import Path
@@ -44,7 +41,8 @@ class ChromaVectorStore(VectorStoreInterface):
             )
             self._is_using_chroma = True
         except Exception as e:
-            print(f"Notice: ChromaDB initialization ({e}). Using persistent in-memory/JSON fallback store.")
+            sys.stderr.write(f"Notice: ChromaDB initialization ({e}). Using persistent in-memory/JSON fallback store.\n")
+            sys.stderr.flush()
             self._is_using_chroma = False
             self._load_fallback_from_disk()
 
