@@ -9,7 +9,7 @@ from src.domain.interfaces import ClassifierInterface
 
 
 class ElectronicsDomainClassifier(ClassifierInterface):
-    """Rule-based & keyword-density classifier for electronics documentation."""
+    """Fast, pre-compiled keyword-density classifier for electronics documentation."""
 
     KEYWORDS_MAP: Dict[ClassificationCategory, List[str]] = {
         ClassificationCategory.POWER_ELECTRONICS: [
@@ -46,39 +46,45 @@ class ElectronicsDomainClassifier(ClassifierInterface):
         ]
     }
 
+    def __init__(self):
+        # Pre-compile regex patterns for fast matching
+        self._compiled_patterns: Dict[ClassificationCategory, List[Tuple[str, re.Pattern, int]]] = {}
+        for cat, keywords in self.KEYWORDS_MAP.items():
+            patterns = []
+            for kw in keywords:
+                weight = 2 if len(kw.split()) > 1 else 1
+                if len(kw) <= 4:
+                    pat = re.compile(r'\b' + re.escape(kw) + r'\b', re.IGNORECASE)
+                else:
+                    pat = re.compile(re.escape(kw), re.IGNORECASE)
+                patterns.append((kw, pat, weight))
+            self._compiled_patterns[cat] = patterns
+
     def classify(self, text: str) -> Tuple[ClassificationCategory, float, List[str]]:
         """
         Classifies given electronics text into category, confidence, and tags.
         """
-        lower_text = text.lower()
         scores: Dict[ClassificationCategory, int] = {}
-        matched_tags_map: Dict[ClassificationCategory, List[str]] = {}
+        matched_tags: Dict[ClassificationCategory, List[str]] = {}
 
-        for category, keywords in self.KEYWORDS_MAP.items():
-            matches = []
-            score = 0
-            for kw in keywords:
-                # Word boundary match for short acronyms, substring for phrases
-                if len(kw) <= 4:
-                    pattern = r'\b' + re.escape(kw) + r'\b'
-                    found = len(re.findall(pattern, lower_text))
-                else:
-                    found = lower_text.count(kw)
-                
-                if found > 0:
-                    score += found * (2 if len(kw.split()) > 1 else 1)
-                    matches.append(kw)
-            
-            scores[category] = score
-            matched_tags_map[category] = matches
+        for category, patterns in self._compiled_patterns.items():
+            cat_score = 0
+            cat_tags = []
+            for kw, pat, weight in patterns:
+                matches = len(pat.findall(text))
+                if matches > 0:
+                    cat_score += matches * weight
+                    cat_tags.append(kw)
+            scores[category] = cat_score
+            matched_tags[category] = cat_tags
 
         total_score = sum(scores.values())
         if total_score == 0:
             return ClassificationCategory.GENERAL_ELECTRONICS, 0.5, ["general"]
 
         best_category = max(scores, key=scores.get)
-        best_score = scores[best_category]
-        confidence = min(round(best_score / (total_score + 1e-6), 2), 1.0)
-        tags = matched_tags_map.get(best_category, [])[:5]
+        confidence = min(round(scores[best_category] / total_score, 2), 1.0)
+        tags = matched_tags.get(best_category, [])[:5]
 
         return best_category, confidence, tags
+

@@ -1,12 +1,11 @@
 """
 Domain Entities and Data Models for Electronics RAG & MCP System.
-Clean Architecture - Domain Layer.
 """
 from enum import Enum
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
-import uuid
 from datetime import datetime, timezone
+import uuid
+from pydantic import BaseModel, Field
 
 
 class ClassificationCategory(str, Enum):
@@ -20,7 +19,7 @@ class ClassificationCategory(str, Enum):
 
 
 class Document(BaseModel):
-    """Represents a raw loaded document before splitting."""
+    """Raw loaded document before splitting."""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
     source_path: str
@@ -31,7 +30,7 @@ class Document(BaseModel):
 
 
 class Chunk(BaseModel):
-    """Represents a split, classified, and embeddable knowledge chunk."""
+    """Split, classified, and embeddable knowledge chunk."""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     document_id: str
     source_title: str
@@ -73,7 +72,7 @@ class RetrievalResult(BaseModel):
 class MCPServerConfig(BaseModel):
     """Configuration data for MCP server connection and runtime."""
     server_name: str = "electronics-rag-mcp"
-    transport: str = "stdio"  # stdio | sse
+    transport: str = "stdio"
     host: str = "0.0.0.0"
     port: int = 8000
     vector_db_path: str = "./data/vector_store"
@@ -88,3 +87,4 @@ class MCPToolInfo(BaseModel):
     description: str
     input_schema: Dict[str, Any]
     category: str = "Electronics RAG"
+
